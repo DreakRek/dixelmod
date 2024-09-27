@@ -1,14 +1,18 @@
 local http = require("socket.http")
 local lfs = require("lfs")
 
--- URL correcta del repositorio de GitHub
+-- URLs del repositorio de GitHub
 local versionURL = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/version.txt"  -- URL del archivo de versión
-local modURL = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/mod.lua" -- URL del archivo del mod
+local modURL = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/mod.lua" -- URL del archivo mod
+local extraFiles = { -- Lista de otros archivos que se encuentran en el repositorio (agrega más si tienes otros archivos)
+    ["config.txt"] = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/config.txt",
+}
 
 -- Rutas locales
-local downloadPath = getGameDirectory() .. "\\modloader\\downloads\\"
-local localVersionFile = downloadPath .. "version.txt"
-local localModFile = downloadPath .. "mod.lua"
+local modloaderPath = getGameDirectory() .. "\\modloader\\mods\\"
+local moonloaderPath = getGameDirectory() .. "\\moonloader\\"
+local localVersionFile = modloaderPath .. "version.txt"
+local localModFile = moonloaderPath .. "mod.lua"
 
 -- Función para descargar el archivo
 function downloadFile(url, destination)
@@ -42,44 +46,63 @@ function readVersion(filePath)
     return nil
 end
 
+-- Función para verificar la existencia de archivos y descargarlos si no existen
+function checkAndDownloadFiles()
+    -- Verificar si el archivo de versión existe
+    if not lfs.attributes(localVersionFile) then
+        sampAddChatMessage("No se encontró el archivo de versión, descargándolo...", 0x73b461)
+        if not downloadFile(versionURL, localVersionFile) then
+            sampAddChatMessage("Error al descargar el archivo de versión.", 0xFF0000)
+            return false
+        end
+    end
+
+    -- Leer la versión remota
+    local remoteVersion = readVersion(localVersionFile)
+
+    -- Verificar si el archivo del mod existe
+    if not lfs.attributes(localModFile) then
+        sampAddChatMessage("No se encontró el archivo mod.lua, descargándolo...", 0x73b461)
+        if not downloadFile(modURL, localModFile) then
+            sampAddChatMessage("Error al descargar el archivo mod.lua.", 0xFF0000)
+            return false
+        end
+    end
+
+    -- Verificar y descargar los archivos adicionales
+    for fileName, fileURL in pairs(extraFiles) do
+        local destinationFile = modloaderPath .. fileName
+        if not lfs.attributes(destinationFile) then
+            sampAddChatMessage("Descargando archivo adicional: " .. fileName, 0x73b461)
+            if not downloadFile(fileURL, destinationFile) then
+                sampAddChatMessage("Error al descargar el archivo: " .. fileName, 0xFF0000)
+                return false
+            end
+        end
+    end
+
+    sampAddChatMessage("Todos los archivos están en su lugar y actualizados.", 0x73b461)
+    return true
+end
+
 -- Función principal
 function main()
     repeat wait(500) until isSampAvailable()
-     
-    sampAddChatMessage("Verificando actualizaciones del mod...", 0x73b461)
 
-    -- Verifica si la carpeta de descarga existe, de lo contrario, la crea
-    if not lfs.attributes(downloadPath, "mode") then
-        lfs.mkdir(downloadPath)
+    sampAddChatMessage("Verificando archivos del mod...", 0x73b461)
+
+    -- Verifica si la carpeta de modloader existe, de lo contrario, la crea
+    if not lfs.attributes(modloaderPath, "mode") then
+        lfs.mkdir(modloaderPath)
     end
 
-    -- Descargar el archivo de versión del repositorio
-    if downloadFile(versionURL, localVersionFile) then
-        sampAddChatMessage("Archivo de versión descargado correctamente.", 0x73b461)
-        
-        -- Leer la versión remota descargada
-        local remoteVersion = readVersion(localVersionFile)
-        print("Versión remota encontrada: " .. tostring(remoteVersion))
-
-        -- Leer la versión local (si existe)
-        local localVersion = readVersion(localVersionFile)
-        print("Versión local encontrada: " .. tostring(localVersion))
-
-        if localVersion ~= remoteVersion then
-            sampAddChatMessage("Nueva versión disponible (" .. remoteVersion .. "), actualizando mod...", 0x73b461)
-            
-            -- Descargar el archivo del mod
-            if downloadFile(modURL, localModFile) then
-                sampAddChatMessage("Mod actualizado a la versión " .. remoteVersion, 0x73b461)
-            else
-                sampAddChatMessage("Error al descargar la nueva versión del mod.", 0xFF0000)
-            end
-        else
-            sampAddChatMessage("El mod ya está actualizado a la versión " .. localVersion, 0x73b461)
-        end
-    else
-        sampAddChatMessage("Error al verificar la versión del mod.", 0xFF0000)
+    -- Verifica si la carpeta de moonloader existe, de lo contrario, la crea
+    if not lfs.attributes(moonloaderPath, "mode") then
+        lfs.mkdir(moonloaderPath)
     end
+
+    -- Verificar y descargar archivos si es necesario
+    checkAndDownloadFiles()
 
     while true do
         wait(1000)

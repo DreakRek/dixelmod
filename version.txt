@@ -1,2 +1,2 @@
 version=1.0
-files=skins/skin1.dff,skins/skin1.txd,vehicles/vehicle1.dff,vehicles/vehicle1.txd,textures/texture1.txd
+files=skins/desert_eagle.dff,skins/desert_eagle.txd,vehicles/bus.dff,vehicles/bus.txd

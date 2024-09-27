@@ -1,110 +1,83 @@
-local http = require("socket.http")
-local lfs = require("lfs")
+script_name("DixelMod Loader")
+script_version("1.0")
 
--- URLs del repositorio de GitHub
-local versionURL = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/version.txt"  -- URL del archivo de versión
-local modURL = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/mod.lua" -- URL del archivo mod
-local extraFiles = { -- Lista de otros archivos que se encuentran en el repositorio (agrega más si tienes otros archivos)
-    ["config.txt"] = "https://raw.githubusercontent.com/DreakRek/dixelmod/main/config.txt",
-}
+local moonloader = require 'moonloader'
+local json = require 'json'
+local http = require 'requests'
+local download_url = "https://dreakrek.github.io/dixelmod/" -- URL base de GitHub Pages
+local version_url = download_url .. "version.json" -- URL del archivo de versión
+local mod_folder = getGameDirectory() .. "\\moonloader\\mods\\dixelmod"
 
--- Rutas locales
-local modloaderPath = getGameDirectory() .. "\\modloader\\mods\\"
-local moonloaderPath = getGameDirectory() .. "\\moonloader\\"
-local localVersionFile = modloaderPath .. "version.txt"
-local localModFile = moonloaderPath .. "mod.lua"
-
--- Función para descargar el archivo
-function downloadFile(url, destination)
-    local response, status = http.request(url)
-    print("Estado de descarga: ", status) -- Mostrar el código de estado HTTP en la consola de MoonLoader
-    if status == 200 then
-        local file = io.open(destination, "wb")
-        if file then
-            file:write(response)
-            file:close()
-            print("Archivo descargado correctamente en: " .. destination)
-            return true
-        else
-            print("Error al crear el archivo en la ruta especificada.")
-            return false
-        end
-    else
-        print("Error al descargar archivo. Código de estado: ", status) -- Mostrar el error de estado
-        return false
-    end
-end
-
--- Función para leer la versión del archivo
-function readVersion(filePath)
-    local file = io.open(filePath, "r")
-    if file then
-        local version = file:read("*all")
-        file:close()
-        return version
-    end
-    return nil
-end
-
--- Función para verificar la existencia de archivos y descargarlos si no existen
-function checkAndDownloadFiles()
-    -- Verificar si el archivo de versión existe
-    if not lfs.attributes(localVersionFile) then
-        sampAddChatMessage("No se encontró el archivo de versión, descargándolo...", 0x73b461)
-        if not downloadFile(versionURL, localVersionFile) then
-            sampAddChatMessage("Error al descargar el archivo de versión.", 0xFF0000)
-            return false
-        end
-    end
-
-    -- Leer la versión remota
-    local remoteVersion = readVersion(localVersionFile)
-
-    -- Verificar si el archivo del mod existe
-    if not lfs.attributes(localModFile) then
-        sampAddChatMessage("No se encontró el archivo mod.lua, descargándolo...", 0x73b461)
-        if not downloadFile(modURL, localModFile) then
-            sampAddChatMessage("Error al descargar el archivo mod.lua.", 0xFF0000)
-            return false
-        end
-    end
-
-    -- Verificar y descargar los archivos adicionales
-    for fileName, fileURL in pairs(extraFiles) do
-        local destinationFile = modloaderPath .. fileName
-        if not lfs.attributes(destinationFile) then
-            sampAddChatMessage("Descargando archivo adicional: " .. fileName, 0x73b461)
-            if not downloadFile(fileURL, destinationFile) then
-                sampAddChatMessage("Error al descargar el archivo: " .. fileName, 0xFF0000)
-                return false
-            end
-        end
-    end
-
-    sampAddChatMessage("Todos los archivos están en su lugar y actualizados.", 0x73b461)
-    return true
-end
-
--- Función principal
 function main()
-    repeat wait(500) until isSampAvailable()
-
-    sampAddChatMessage("Verificando archivos del mod...", 0x73b461)
-
-    -- Verifica si la carpeta de modloader existe, de lo contrario, la crea
-    if not lfs.attributes(modloaderPath, "mode") then
-        lfs.mkdir(modloaderPath)
+    if not doesDirectoryExist(mod_folder) then
+        createDirectory(mod_folder)
     end
 
-    -- Verifica si la carpeta de moonloader existe, de lo contrario, la crea
-    if not lfs.attributes(moonloaderPath, "mode") then
-        lfs.mkdir(moonloaderPath)
-    end
-
-    -- Verificar y descargar archivos si es necesario
-    checkAndDownloadFiles()
+    checkVersion()
 
     while true do
-        wait(1000)
+        wait(0)
+    end
+end
+
+function checkVersion()
+    local response = http.get(version_url)
+    if response.status_code == 200 then
+        local remote_data = json.decode(response.text)
+        local remote_version = remote_data.version
+        local local_version_file = mod_folder .. "\\version.txt"
+        local local_version = "0.0"
+
+        if doesFileExist(local_version_file) then
+            local file = io.open(local_version_file, "r")
+            local_version = file:read("*all")
+            file:close()
+        end
+
+        if local_version ~= remote_version then
+            downloadFiles(remote_data.files)
+            local file = io.open(local_version_file, "w")
+            file:write(remote_version)
+            file:close()
+        else
+            print("DixelMod está actualizado.")
+        end
+    else
+        print("Error al verificar la versión del mod.")
+    end
+end
+
+function downloadFiles(files)
+    for category, file_list in pairs(files) do
+        for _, file in ipairs(file_list) do
+            local file_url = download_url .. file
+            local save_path = mod_folder .. "\\" .. file
+            downloadFile(file_url, save_path)
+        end
+    end
+    print("Todos los archivos del mod han sido descargados y actualizados.")
+end
+
+function downloadFile(url, save_path)
+    local response = http.get(url)
+    if response.status_code == 200 then
+        createDirectoryRecursively(save_path) -- Crea directorios si es necesario
+        local file = io.open(save_path, "wb")
+        file:write(response.body)
+        file:close()
+        print("Descargado: " .. url)
+    else
+        print("Error al descargar: " .. url)
+    end
+end
+
+function createDirectoryRecursively(filePath)
+    local path = filePath:match("(.+)[/\\].-$") -- Obtiene el directorio base
+    local current_path = ""
+    for folder in path:gmatch("[^\\/]+") do
+        current_path = current_path .. folder .. "\\"
+        if not doesDirectoryExist(current_path) then
+            createDirectory(current_path)
+        end
     end
 end

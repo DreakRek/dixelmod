@@ -1,2 +1,1 @@
-version=1.0
-files=skins/desert_eagle.dff,skins/desert_eagle.txd,vehicles/bus.dff,vehicles/bus.txd
+1.0

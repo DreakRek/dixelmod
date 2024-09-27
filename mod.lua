@@ -31,16 +31,16 @@ end
 
 function checkVersion()
     sampAddChatMessage(u8"Verificando la versión del mod...", 0x73b461) -- Mensaje de depuración
-    local response = http.get(version_url)
+    downloadFile(version_url, mod_folder .. "\\version.txt") -- Descarga el archivo de versión
 
-    if response and response.status_code == 200 then
-        sampAddChatMessage(u8"Conexión establecida, verificando versión...", 0x73b461) -- Mensaje de depuración
-        
-        local version_info = response.text
+    if doesFileExist(mod_folder .. "\\version.txt") then
+        local file = io.open(mod_folder .. "\\version.txt", "r")
+        local version_info = file:read("*all")
+        file:close()
+
         local remote_version = version_info:match("version=(%S+)")
         local file_list = version_info:match("files=(.*)")
 
-        -- Depuración: Imprimir información recibida
         sampAddChatMessage(u8"Versión remota: " .. remote_version, 0x73b461)
         sampAddChatMessage(u8"Lista de archivos: " .. file_list, 0x73b461)
 
@@ -80,10 +80,9 @@ function checkVersion()
             sampAddChatMessage(u8"DixelMod ya está actualizado.", 0x73b461)
         end
     else
-        sampAddChatMessage(u8"Error al verificar la versión del mod o no se pudo conectar al servidor.", 0x73b461)
+        sampAddChatMessage(u8"Error al descargar el archivo de versión.", 0x73b461)
     end
 end
-
 
 function downloadFiles(files)
     sampAddChatMessage(u8"Iniciando descarga de archivos...", 0x73b461) -- Mensaje de depuración
@@ -91,7 +90,7 @@ function downloadFiles(files)
         local file_url = download_url .. file
         local save_path = mod_folder .. "\\" .. file
         sampAddChatMessage(u8"Descargando: " .. file_url, 0x73b461) -- Mensaje de depuración
-        downloadFile(file_url, save_path) -- Siempre intenta descargar y reemplazar
+        downloadFile(file_url, save_path)
     end
     sampAddChatMessage(u8"Todos los archivos del mod han sido descargados y actualizados.", 0x73b461)
 end
@@ -103,12 +102,11 @@ function downloadFile(url, save_path)
         local file = io.open(save_path, "wb")
         file:write(response.body)
         file:close()
-        sampAddChatMessage(u8"Descargado y reemplazado: " .. url, 0x73b461)
+        sampAddChatMessage(u8"Descargado: " .. url, 0x73b461)
     else
         sampAddChatMessage(u8"Error al descargar: " .. url, 0x73b461)
     end
 end
-
 
 function createDirectoryRecursively(filePath)
     local path = filePath:match("(.+)[/\\].-$") -- Obtiene el directorio base

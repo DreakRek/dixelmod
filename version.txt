@@ -1,4 +1,4 @@
-https://dreakrek.github.io/dixelmod/skins/ak47.dff,ak47.dff
-https://dreakrek.github.io/dixelmod/skins/ak47.txd,ak47.txd
-https://dreakrek.github.io/dixelmod/vehicles/beagle.dff,beagle.dff
-https://dreakrek.github.io/dixelmod/vehicles/beagle.txd,beagle.txd
+https://dreakrek.github.io/dixelmod/skins/ak47.dff,ak47.dff,v1.0
+https://dreakrek.github.io/dixelmod/skins/ak47.txd,ak47.txd,v1.0
+https://dreakrek.github.io/dixelmod/vehicles/beagle.dff,beagle.dff,v1.0
+https://dreakrek.github.io/dixelmod/vehicles/beagle.txd,beagle.txd,v1.0

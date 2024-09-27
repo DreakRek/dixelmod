@@ -54,10 +54,16 @@ function checkVersion()
 
         if local_version ~= remote_version then
             sampAddChatMessage(u8"Actualizando DixelMod a la versión " .. remote_version, 0x73b461) -- Mensaje de depuración
+            
+            -- Asegúrate de que la lista de archivos se separa correctamente
             local files = {}
-            for file in file_list:gmatch("[^,]+") do
-                table.insert(files, file)
+            for file in file_list:gmatch("([^,]+)") do
+                file = file:gsub("^%s*(.-)%s*$", "%1") -- Elimina espacios en blanco alrededor
+                if #file > 0 then
+                    table.insert(files, file)
+                end
             end
+            
             downloadFiles(files)
             local file = io.open(local_version_file, "w")
             file:write(remote_version)

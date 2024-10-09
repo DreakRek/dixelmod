@@ -33,4 +33,4 @@ https://dreakrek.github.io/dixelmod/vehicles/raindanc.txd,raindanc.txd,v1.0
 https://dreakrek.github.io/dixelmod/vehicles/rcbaron.dff,rcbaron.dff,v1.0
 https://dreakrek.github.io/dixelmod/vehicles/rcbaron.txd,rcbaron.txd,v1.0
 https://dreakrek.github.io/dixelmod/vehicles/rcraider.dff,rcraider.dff,v1.0
-https://dreakrek.github.io/dixelmod/vehicles/rcraider.txd,rcraider.txd,v1.0
+https://dreakrek.github.io/dixelmod/mods/recargar.cs,recargar.cs,v1.0

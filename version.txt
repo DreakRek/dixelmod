@@ -36,4 +36,4 @@ https://dreakrek.github.io/dixelmod/vehicles/rcbaron.txd,rcbaron.txd,v1.0
 https://dreakrek.github.io/dixelmod/vehicles/rcraider.dff,rcraider.dff,v1.0
 https://dreakrek.github.io/dixelmod/vehicles/rcraider.txd,rcraider.txd,v1.0
 https://dreakrek.github.io/dixelmod/vehicles/shamal.dff,shamal.dff,v1.0
-https://dreakrek.github.io/dixelmod/vehicles/shamal.tx,shamal.tx,v1.0
+https://dreakrek.github.io/dixelmod/vehicles/shamal.txd,shamal.txd,v1.0
